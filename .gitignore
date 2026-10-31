@@ -1,0 +1,5 @@
+node_modules/
+android/
+desktop/node_modules/
+desktop/dist/
+desktop/app/

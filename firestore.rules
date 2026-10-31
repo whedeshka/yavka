@@ -1,0 +1,31 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isAdmin() {
+      return request.auth != null
+        && request.auth.token.email == 'd3mon228@gmail.com';
+    }
+    match /publicGroups/{groupId} {
+      allow read: if true;
+      allow create, update, delete: if isAdmin();
+    }
+    match /sessions/{sessionId} {
+      allow read: if true;
+      allow create, update, delete: if isAdmin();
+      match /submissions/{uid} {
+        allow read: if isAdmin();
+        allow create: if request.auth != null
+          && request.auth.uid == uid
+          && get(/databases/$(database)/documents/sessions/$(sessionId)).data.open == true
+          && request.time < get(/databases/$(database)/documents/sessions/$(sessionId)).data.expiresAt
+          && request.resource.data.keys().hasOnly(['uid','groupId','studentName','answers','createdAt'])
+          && request.resource.data.uid == uid
+          && request.resource.data.groupId == get(/databases/$(database)/documents/sessions/$(sessionId)).data.groupId
+          && request.resource.data.studentName in get(/databases/$(database)/documents/publicGroups/$(request.resource.data.groupId)).data.names
+          && request.resource.data.answers is list
+          && request.resource.data.answers.size() == get(/databases/$(database)/documents/sessions/$(sessionId)).data.lessons.size();
+        allow update, delete: if false;
+      }
+    }
+  }
+}

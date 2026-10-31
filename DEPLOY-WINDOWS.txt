@@ -1,0 +1,6 @@
+1) Распакуйте ZIP.
+2) Откройте папку yavka-apk.
+3) В адресной строке Проводника напишите powershell и нажмите Enter.
+4) Выполните: firebase.cmd deploy --only hosting,firestore:rules
+5) В Firebase Console включите Authentication → Sign-in method → Anonymous.
+6) В приложении Явка заполните настоящие фамилии, войдите во вкладке Онлайн и откройте перекличку.
