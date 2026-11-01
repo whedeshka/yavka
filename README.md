@@ -38,3 +38,8 @@ Workflow `.github/workflows/build-windows.yml` копирует `www` в desktop
 
 ## Данные
 Локальные записи посещаемости сохраняются локально. Онлайн-ответы хранятся в Firestore. Домашние задания и Supabase в этой версии отсутствуют.
+
+
+## Version 9.2.0
+
+Fixed opening a daily attendance session: the publish handler now calls the cloud watch function through `window.yavkaCloud.watch(...)` instead of using an undefined lexical `this`. This fixes the runtime error `Cannot read properties of undefined (reading 'watch')`.

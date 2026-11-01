@@ -51,7 +51,7 @@ window.yavkaCloud = {
     const now=new Date();const expires=new Date(now.getFullYear(),now.getMonth(),now.getDate(),23,59,59,999);
     const sessionId=groupId+"_"+date;
     await setDoc(doc(db,"sessions",sessionId),{groupId,date,open:true,expiresAt:expires,lessons,openedAt:serverTimestamp(),openedBy:auth.currentUser.uid},{merge:true});
-    this.watch(groupId,date);return {url:"https://wdyavka.web.app/?group="+encodeURIComponent(groupId),lessons};
+    window.yavkaCloud.watch(groupId,date);return {url:"https://wdyavka.web.app/?group="+encodeURIComponent(groupId),lessons};
   },
   watch:(group,date=localDate())=>{
     assertAdmin();if(stopWatch){stopWatch();stopWatch=null;}
