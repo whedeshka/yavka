@@ -1,45 +1,31 @@
-# Явка 9.0 — APK, Windows и онлайн-перекличка
+# Явка — локальная версия для GitHub
 
-## Что внутри
-- `www/index.html` — приложение старосты (Android и браузер).
-- `desktop/` — приложение Windows EXE; запускает локальный HTTP-сервер для корректной работы Firebase Auth в Electron.
-- `hosting/index.html` и `hosting/student.html` — публичная студенческая страница.
-- `firebase.json`, `.firebaserc`, `firestore.rules` — настройки Firebase Hosting и Firestore.
+Облачная перекличка и Firebase удалены. Староста отмечает студентов самостоятельно во вкладке «Отметить пару». Данные хранятся локально на устройстве/в браузере; автоматической синхронизации между устройствами нет.
 
-## ВАЖНО: сначала настройте Firebase Console
-1. Authentication → Sign-in method → включите **Anonymous** (студентам) и Email/Password (старосте).
-2. В Authentication → Users убедитесь, что аккаунт старосты создан и email подтверждён. Правила Firestore ниже ограничивают админ-доступ адресом `d3mon228@gmail.com`; если аккаунт старосты другой, замените email в `firestore.rules` перед публикацией.
-3. В Firestore → Rules замените правила содержимым `firestore.rules` (или разверните через CLI). Не используйте открытые правила.
+## Опубликовать сайт через GitHub Pages
+1. Создайте на GitHub новый пустой репозиторий.
+2. Загрузите содержимое этой папки `yavka-apk` в корень репозитория (папки `www`, `desktop`, `.github` и файлы рядом).
+3. Откройте Settings → Pages и выберите GitHub Actions как источник публикации.
+4. Вкладка Actions запустит workflow «GitHub Pages». После успешного запуска адрес будет вида `https://ВАШ-ЛОГИН.github.io/ИМЯ-РЕПОЗИТОРИЯ/`.
 
-## Публикация с Windows
-Распакуйте архив, откройте PowerShell в папке `yavka-apk` (там, где лежит `firebase.json`) и выполните:
+## Создать приложение Windows на GitHub
+После загрузки репозитория откройте Actions → «Сборка Windows» → Run workflow. Готовый `.exe` будет в Artifacts у завершённого запуска.
 
-```powershell
-firebase.cmd deploy --only hosting,firestore:rules
-```
+## Создать APK Android на GitHub
+Откройте Actions → «Сборка APK» → Run workflow. Готовый APK будет в Artifacts.
 
-После публикации студенческая ссылка: `https://wdyavka.web.app/?group=26л-02`.
+## Запуск на компьютере локально
+В папке `desktop`: `npm install`, затем `npm run dist` (если скрипт dist отсутствует — `npx electron-builder --win portable`).
 
-## Работа старосты
-- В приложении откройте вкладку «Группа» и внесите реальные фамилии (одна фамилия на строку). Не оставляйте тестовые «Студент 1/2/3».
-- Откройте вкладку «Онлайн», войдите под email/password аккаунтом старосты.
-- Нажмите «Открыть перекличку на сегодня», скопируйте ссылку и отправьте группе.
-- Ответы появляются в реальном времени. «Перенести отсутствующих в журнал» добавляет отсутствия в локальный журнал на текущем устройстве.
-- Для просмотра на другом устройстве войдите в тот же аккаунт старосты; локальный журнал посещаемости сам по себе между устройствами не синхронизируется.
+## Важно
+- Firebase Hosting, Firestore, Authentication и облачная студенческая ссылка больше не используются. Старый сайт в Firebase сам по себе не удаляется — при необходимости отключите/удалите его отдельно в Firebase Console.
+- Не удаляйте папку `desktop`: она нужна для Windows-приложения.
+- Храните резервные копии данных приложения: локальные данные не попадут в GitHub автоматически.
 
-## Ограничения идентификации
-Студенты входят анонимно. Firestore разрешает одну отправку на один анонимный браузер/устройство, но это **не подтверждает личность студента**: человек может очистить данные браузера или выбрать чужую фамилию. Староста должен сверять ответы. Для строгой защиты понадобятся персональные PIN-коды/учётные записи студентов или серверная функция. Неприславшие ответ не считаются автоматически отсутствующими.
-
-## Сборка APK
-Содержимое папки `www` используется как `webDir` Capacitor. Workflow `.github/workflows/build-apk.yml` собирает APK.
-
-## Сборка Windows
-Workflow `.github/workflows/build-windows.yml` копирует `www` в desktop app, локальную библиотеку Excel и Firebase-модули, затем собирает portable EXE.
-
-## Данные
-Локальные записи посещаемости сохраняются локально. Онлайн-ответы хранятся в Firestore. Домашние задания и Supabase в этой версии отсутствуют.
-
-
-## Version 9.2.0
-
-Fixed opening a daily attendance session: the publish handler now calls the cloud watch function through `window.yavkaCloud.watch(...)` instead of using an undefined lexical `this`. This fixes the runtime error `Cannot read properties of undefined (reading 'watch')`.
+## Отметка одногруппников через Firebase (ссылка для студентов)
+1. console.firebase.google.com → создать проект → Build → **Authentication** → Sign-in method → включить **Anonymous**.
+2. Build → **Firestore Database** → создать базу → вкладка Rules → вставить содержимое `firestore.rules` → Publish.
+3. Project settings → Your apps → Web (`</>`) → скопировать `firebaseConfig` в `www/firebase-config.js` (и в `desktop/app/firebase-config.js`).
+4. Залить в GitHub, дождаться публикации Pages.
+5. В приложении: вкладка «Группа» → «Создать ссылку» → отправить одногруппникам.
+6. «Отметить пару» → выбрать пару → «Ответы студентов»: те, кто не придёт, отметятся как отсутствующие.

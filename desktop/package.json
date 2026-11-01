@@ -1,6 +1,6 @@
 {
   "name": "yavka-desktop",
-  "version": "9.2.0",
+  "version": "10.0.0",
   "description": "Учёт явки студентов",
   "author": "Yavka",
   "main": "main.js",
@@ -26,5 +26,8 @@
     "portable": {
       "artifactName": "Yavka-${version}.exe"
     }
+  },
+  "scripts": {
+    "dist": "electron-builder --win portable --x64"
   }
 }

@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="ru"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Явка — отметиться</title><meta name="theme-color" content="#070b08">
+<style>
+:root{--bg:#070b08;--card:#101812;--ink:#ecf8ee;--mut:#91a397;--line:#26382b;--ac:#70f08b;--u:#ff7777;color-scheme:dark}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.45 Onest,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+.w{max-width:520px;margin:0 auto;padding:calc(18px + env(safe-area-inset-top,0px)) 14px calc(40px + env(safe-area-inset-bottom,0px))}
+h1{font-size:22px;margin:0 0 4px}.m{color:var(--mut);font-size:14px;margin-bottom:14px}
+button{font:inherit;color:inherit;cursor:pointer}
+.b{display:block;width:100%;text-align:left;border:1px solid var(--line);background:var(--card);border-radius:12px;padding:13px;margin-bottom:8px}
+.all{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
+.all button,.yn button{padding:12px 8px;border-radius:12px;border:1px solid var(--line);background:var(--card);font-weight:700}
+.p{border:1px solid var(--line);background:var(--card);border-radius:12px;padding:12px;margin-bottom:8px}
+.p b{display:block}.p span{color:var(--mut);font-size:13px}
+.yn{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.yes{background:linear-gradient(135deg,#8bffa0,#4bd66c)!important;color:#06200d!important;border-color:#8bffa0!important}
+.no{background:var(--u)!important;color:#2a0707!important;border-color:var(--u)!important}
+.st{margin-top:12px;font-size:14px;color:var(--mut);min-height:20px}
+.lnk{background:none;border:0;color:var(--ac);padding:0;text-decoration:underline}
+button:active{transform:scale(.97)}
+</style></head><body><div class="w" id="app">Загрузка…</div>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="firebase-config.js"></script>
+<script>
+const $=s=>document.querySelector(s),esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const g=new URLSearchParams(location.search).get("g"),pad=n=>String(n).padStart(2,"0"),t=new Date();
+const D=t.getFullYear()+"-"+pad(t.getMonth()+1)+"-"+pad(t.getDate());
+const DOW=["воскресенье","понедельник","вторник","среда","четверг","пятница","суббота"];
+let G,db,ME=null,ans={},stt="";
+function weekOf(ds,w1){const [y,m,d]=ds.split("-").map(Number),[a,b,c]=w1.split("-").map(Number);const an=Date.UTC(a,b-1,c),dt=Date.UTC(y,m-1,d),am=an-((new Date(an).getUTCDay()+6)%7)*864e5,dm=dt-((new Date(dt).getUTCDay()+6)%7)*864e5;return ((Math.floor(Math.floor((dm-am)/864e5)/7)%2)+2)%2}
+const dowOf=ds=>{const [y,m,d]=ds.split("-").map(Number);return new Date(Date.UTC(y,m-1,d)).getUTCDay()};
+function parseSlot(s){const [name,room]=s.replace(/^!/,"").split("|");return {name,room}}
+const AK=()=>"yavka-a-"+g+"-"+ME+"-"+D;
+function pairs(){const day=G.sch[weekOf(D,G.w1)][dowOf(D)]||[];return day.map((s,k)=>s?{k,...parseSlot(s)}:null).filter(Boolean)}
+function allV(ps){const v=ps.map(p=>ans[p.k]);return v.every(x=>x===true)?true:v.every(x=>x===false)?false:null}
+function msg(t){$("#app").innerHTML=`<div class="m">${t}</div>`}
+function pick(i){ME=i;localStorage.setItem("yavka-me-"+g,i);try{ans=JSON.parse(localStorage.getItem(AK()))||{}}catch(e){ans={}}stt="";render()}
+function render(){
+  const A=$("#app");
+  if(ME===null){A.innerHTML=`<h1>Кто вы?</h1><div class="m">Группа ${esc(G.group)} · выберите себя в списке</div>`+G.names.map((n,i)=>`<button class="b" data-a="me" data-i="${i}">${esc(n)}</button>`).join("");return}
+  const ps=pairs(),dt=new Date().toLocaleDateString("ru-RU",{day:"numeric",month:"long"});
+  let h=`<h1>${esc(G.names[ME])}</h1><div class="m">${dt}, ${DOW[dowOf(D)]} · <button class="lnk" data-a="chg">это не я</button></div>`;
+  if(!ps.length){A.innerHTML=h+`<div class="m">Сегодня занятий нет 🎉</div>`;return}
+  const av=allV(ps);
+  h+=`<div class="all"><button class="${av===true?"yes":""}" data-a="all" data-v="1">Буду на всех парах</button><button class="${av===false?"no":""}" data-a="all" data-v="0">Не буду на всех парах</button></div>`;
+  h+=ps.map(p=>`<div class="p"><b>${p.k+1} пара · ${esc(G.times[p.k]||"")}</b><span>${esc(p.name)}${p.room?" · каб. "+esc(p.room):""}</span><div class="yn"><button class="${ans[p.k]===true?"yes":""}" data-a="s" data-k="${p.k}" data-v="1">Буду</button><button class="${ans[p.k]===false?"no":""}" data-a="s" data-k="${p.k}" data-v="0">Не буду</button></div></div>`).join("");
+  A.innerHTML=h+`<div class="st">${stt}</div>`;
+}
+async function send(){
+  const ps=pairs(),o={};ps.forEach(p=>{if(ans[p.k]!==undefined)o[p.k]=ans[p.k]});
+  localStorage.setItem(AK(),JSON.stringify(o));stt="Отправляю…";render();
+  try{await db.doc(`groups/${g}/att/${D}_${ME}`).set({i:ME,date:D,slots:o,ts:firebase.firestore.FieldValue.serverTimestamp()});stt="Отправлено ✓ Ответ можно изменить в любой момент."}
+  catch(e){stt="Не удалось отправить — нажмите ещё раз."}
+  render();
+}
+document.addEventListener("click",e=>{
+  const b=e.target.closest("[data-a]");if(!b)return;const a=b.dataset.a;
+  if(a==="me")pick(+b.dataset.i);
+  else if(a==="chg"){localStorage.removeItem("yavka-me-"+g);ME=null;ans={};render()}
+  else if(a==="s"){ans[+b.dataset.k]=b.dataset.v==="1";send()}
+  else if(a==="all"){pairs().forEach(p=>ans[p.k]=b.dataset.v==="1");send()}
+});
+(async()=>{
+  if(!g)return msg("Ссылка неполная. Попросите старосту прислать её ещё раз.");
+  try{
+    firebase.initializeApp(window.FIREBASE_CONFIG);db=firebase.firestore();
+    const s=await db.doc("groups/"+g).get();
+    if(!s.exists)return msg("Группа не найдена. Проверьте ссылку.");
+    G=s.data();G.sch=JSON.parse(G.sch);
+    const me=localStorage.getItem("yavka-me-"+g);
+    if(me!==null&&G.names[+me]!==undefined)pick(+me);else render();
+  }catch(e){msg("Не удалось загрузить данные. Проверьте интернет.")}
+})();
+</script></body></html>

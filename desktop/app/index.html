@@ -39,10 +39,10 @@ h1{font-size:22px;line-height:1.2;margin:0}
 .hint{font-size:13px;color:var(--mut);margin:12px 2px 8px}
 .row{display:flex;width:100%;justify-content:space-between;align-items:center;gap:10px;text-align:left;border:1px solid var(--line);background:var(--card);border-radius:10px;padding:11px 12px;margin-bottom:6px}
 .row .st{font-size:13px;font-weight:500;border-radius:20px;padding:2px 10px;background:var(--acs);color:var(--ac);white-space:nowrap}
-.row.u{border-color:var(--u);background:var(--us)}.row.u .st{background:var(--u);color:#fff}
+.row.p{border-color:var(--ac);background:var(--acs)}.row.u{border-color:var(--u);background:var(--us)}.row.u .st{background:var(--u);color:#fff}
 .row.e{border-color:var(--e);background:var(--es)}.row.e .st{background:var(--e);color:#fff}
 :root[data-theme="dark"] .row.u .st,:root[data-theme="dark"] .row.e .st{color:#1a1206}
-.pb{border:1px solid var(--line);background:var(--bg);border-radius:8px;padding:8px 12px;font-size:14px;font-weight:500;min-width:84px}.pb.on.u{background:var(--u);border-color:var(--u);color:#fff}.pb.on.e{background:var(--e);border-color:var(--e);color:#fff}.acts{display:flex;gap:6px}.nm2{flex:1}.gt{width:100%;height:340px;border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:8px;padding:8px;font:inherit}.period{display:flex;gap:6px;margin-bottom:12px;align-items:center}.period input{border:1px solid var(--line);background:var(--card);border-radius:8px;padding:7px 8px;flex:1;min-width:0}.bs{display:flex;justify-content:space-between;font-weight:500;padding-top:8px}.sm{color:var(--mut);font-size:13px}h2{font-size:16px;margin:18px 0 4px}.bar{position:fixed;left:0;right:0;bottom:0;background:var(--card);border-top:1px solid var(--line);padding:10px 14px calc(10px + env(safe-area-inset-bottom,0px));display:flex;gap:10px;justify-content:center}
+.pb{border:1px solid var(--line);background:var(--bg);border-radius:8px;padding:8px 12px;font-size:14px;font-weight:500;min-width:84px}.pb.on.p{background:var(--ac);border-color:var(--ac);color:#06200d}.pb.on.u{background:var(--u);border-color:var(--u);color:#fff}.pb.on.e{background:var(--e);border-color:var(--e);color:#fff}.acts{display:flex;gap:6px}.nm2{flex:1}.gt{width:100%;height:340px;border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:8px;padding:8px;font:inherit}.period{display:flex;gap:6px;margin-bottom:12px;align-items:center}.period input{border:1px solid var(--line);background:var(--card);border-radius:8px;padding:7px 8px;flex:1;min-width:0}.bs{display:flex;justify-content:space-between;font-weight:500;padding-top:8px}.sm{color:var(--mut);font-size:13px}h2{font-size:16px;margin:18px 0 4px}.bar{position:fixed;left:0;right:0;bottom:0;background:var(--card);border-top:1px solid var(--line);padding:10px 14px calc(10px + env(safe-area-inset-bottom,0px));display:flex;gap:10px;justify-content:center}
 .bar .btn{flex:1;max-width:340px}
 .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px}
 .stat{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
@@ -181,14 +181,17 @@ h2{letter-spacing:-.25px;color:#dff8e4;margin-top:20px}
     <button class="tab" role="tab" data-act="tab" data-v="mark">Отметить пару</button>
     <button class="tab" role="tab" data-act="tab" data-v="sum">Сводки</button>
     <button class="tab" role="tab" data-act="tab" data-v="grp">Группа</button>
-    <button class="tab" role="tab" data-act="tab" data-v="online">Онлайн</button>
   </div>
   <div id="app"></div>
 </div>
 <div class="toast" id="toast"></div>
 <div class="ov" id="ov"><div class="box"><div class="hint" style="margin-top:0">Не удалось открыть меню отправки. Скопируйте текст вручную:</div><textarea id="ta" readonly></textarea><div class="foot"><button class="btn pri" data-act="closeOv">Закрыть</button></div></div></div>
 <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js" defer></script>
-<script type="module" src="./firebase-cloud.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js" defer></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js" defer></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js" defer></script>
+<script src="firebase-config.js"></script>
+
 <script>
 let NAMES=["Студент 1","Студент 2","Студент 3"];
 const KEY="attendance-26l02-oct-v2";
@@ -314,7 +317,7 @@ function viewMark(){
     <div class="full"><label for="fs">Предмет</label><input id="fs" data-f="subject" list="subs" value="${esc(ui.subject)}" placeholder="Например: Анатомия"><datalist id="subs">${subs.map(s=>`<option value="${esc(s)}">`).join("")}</datalist></div>
     <div class="full"><label for="fp">Сколько пар пропущено (1 пара = 2 академических часа)</label><select id="fp" data-f="pairs">${[1,2,3,4].map(p=>`<option value="${p}" ${ui.pairs===p?"selected":""}>${pairsWord(p)} = ${p*2} ч</option>`).join("")}</select></div>
   </div></div>
-  ${schedHtml()}<div class="hint attendance-hint">Ручная отметка старостой: отметьте только отсутствующих — остальные считаются присутствующими. Повторное нажатие снимает отметку. Отсутствуют: ${n} <button class="pb" data-act="allHere" style="min-width:0;margin-left:8px">Сбросить</button></div>
+  ${schedHtml()}<div class="hint attendance-hint">Ручная отметка старостой: отметьте только отсутствующих — остальные считаются присутствующими. Повторное нажатие снимает отметку. Отсутствуют: ${n} <button class="pb" data-act="allHere" style="min-width:0;margin-left:8px">Сбросить</button> <button class="pb" data-act="pull" style="min-width:0;margin-left:4px">Ответы студентов</button></div>
   ${NAMES.map((nm,i)=>{const m=ui.marks[i];return `<div class="row ${m||""} ${ui.pop===i?"pop":""}"><span class="nm2">${esc(nm)}</span><span class="acts"><button class="pb ${m==="p"?"on":""}" data-act="mp" data-i="${i}" aria-pressed="${m==="p"}">Был</button><button class="pb ${m==="u"?"on u":""}" data-act="mu" data-i="${i}" aria-pressed="${m==="u"}">Неуваж.</button><button class="pb ${m==="e"?"on e":""}" data-act="me" data-i="${i}" aria-pressed="${m==="e"}">Уваж.</button></span></div>`}).join("")}
   <div class="bar"><button class="btn pri" data-act="saveMarks">Сохранить пропуски${n?" ("+n+")":""}</button></div>`;
 }
@@ -336,32 +339,49 @@ function viewDetail(){
   `<div class="foot"><button class="btn pri" data-act="shareOne" data-i="${i}">Поделиться сводкой</button></div>`;
 }
 function cfgForm(){const f=(id,l,v,c)=>`<div class="${c||""}"><label for="${id}">${l}</label><input id="${id}" value="${esc(v)}"></div>`;return `<div class="panel"><div class="form">${f("cg","Группа",CFG.group)}${f("cc","Курс",CFG.course)}${f("cs","Специальность",CFG.spec,"full")}<div class="full"><label for="cw">Начало первой недели (для чередования расписания)</label><input type="date" id="cw" value="${CFG.w1}"></div></div><div class="foot"><button class="btn pri" data-act="saveCfg">Сохранить настройки</button></div></div><div style="height:12px"></div>`}
-function viewGrp(){return cfgForm()+`<div class="panel"><label class="hint" for="gn" style="display:block;margin-top:0">Список группы: одна фамилия на строку. При удалении студента его записи о пропусках будут удалены.</label><textarea id="gn" class="gt">${esc(NAMES.join("\n"))}</textarea><div class="foot"><button class="btn pri" data-act="saveNames">Сохранить список</button><button class="btn" data-act="clearAll">Очистить все пропуски</button></div></div>`}
+function viewGrp(){return cfgForm()+linkPanel()+`<div class="panel"><label class="hint" for="gn" style="display:block;margin-top:0">Список группы: одна фамилия на строку. При удалении студента его записи о пропусках будут удалены.</label><textarea id="gn" class="gt">${esc(NAMES.join("\n"))}</textarea><div class="foot"><button class="btn pri" data-act="saveNames">Сохранить список</button><button class="btn" data-act="clearAll">Очистить все пропуски</button></div></div>`}
 
-function viewOnline(){
-  const c=window.yavkaCloudState||{};
-  if(!c.user||c.user.isAnonymous)return `<div class="panel"><h2 style="margin-top:0">Облачная перекличка</h2><p class="hint">Войдите под аккаунтом старосты Firebase. Студенты будут отмечаться по общей ссылке.</p><div class="form"><div class="full"><label for="cloudEmail">Email старосты</label><input id="cloudEmail" type="email" autocomplete="username" placeholder="Email из Firebase Authentication"></div><div class="full"><label for="cloudPass">Пароль</label><input id="cloudPass" type="password" autocomplete="current-password" placeholder="Пароль аккаунта старосты"></div></div><div class="foot"><button class="btn pri" data-act="cloudLogin">Войти в Firebase</button></div>${c.error?`<p class="error">${esc(c.error)}</p>`:""}</div>`;
-  const date=iso(new Date()),subs=c.submissions||[],lessons=(c.session&&c.session.lessons)||[];
-  return `<div class="panel"><div style="display:flex;justify-content:space-between;gap:8px;align-items:center"><div><h2 style="margin:0">Облачная перекличка</h2><div class="online-status">Вошли: ${esc(c.user.email||"староста")}</div></div><button class="pb" data-act="cloudLogout">Выйти</button></div><p class="hint">Группа ${esc(CFG.group)} · ${dstr(date)}. Сначала внесите реальные фамилии во вкладке «Группа».</p><div class="online-status">Ссылка студентам: <b>https://wdyavka.web.app/?group=${encodeURIComponent(CFG.group)}</b> <button class="pb" data-act="copyCloudLink">Копировать</button></div><div class="foot"><button class="btn pri" data-act="cloudPublish">Открыть перекличку на сегодня</button><button class="btn" data-act="cloudRefresh">Обновить ответы</button></div><div class="online-status" id="cloudLinkLine">Ссылка появится после открытия переклички.</div>${c.error?`<p class="error">${esc(c.error)}</p>`:""}</div><div class="panel"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><b>Ответы студентов</b><span class="chip ok">${subs.length} отправлено</span></div>${!lessons.length?`<div class="empty">Откройте перекличку, чтобы увидеть пары и ответы.</div>`:subs.length?subs.map(s=>`<div class="online-card"><b>${esc(s.studentName||"Без имени")}</b><div class="online-status">Отправлено: ${s.createdAt&&s.createdAt.toDate?s.createdAt.toDate().toLocaleTimeString("ru-RU",{hour:"2-digit",minute:"2-digit"}):"только что"}</div>${(s.answers||[]).map(a=>`<div class="online-answer"><span>${esc(a.time||"")} · ${esc(a.subject||"")}</span><b style="color:${a.status==="p"?"var(--ac)":"var(--u)"}">${a.status==="p"?"Присутствует":"Отсутствует"}</b></div>`).join("")}</div>`).join(""):`<div class="empty">Пока никто не отправил отметки.</div>`}${subs.length?`<div class="foot"><button class="btn pri" data-act="cloudImport">Перенести отсутствующих в журнал</button><button class="btn" data-act="cloudClose">Закрыть перекличку</button></div>`:""}<p class="hint">Студенты без отправленного ответа будут показаны отдельно как «не ответили» — они автоматически не считаются отсутствующими.</p></div>`;
+function syncAttendanceUI(){render()}
+const FB={},LKEY="yavka-link";
+const lk=()=>{try{return JSON.parse(localStorage.getItem(LKEY))||{}}catch(e){return {}}};
+const lkSet=o=>localStorage.setItem(LKEY,JSON.stringify({...lk(),...o}));
+const defBase=()=>/^https?:/.test(location.protocol)?location.href.replace(/[?#].*$/,"").replace(/[^\/]*$/,""):"";
+function linkPanel(){const L=lk();return `<div class="panel"><label class="hint" for="lb" style="display:block;margin-top:0">Ссылка для одногруппников: они выбирают себя и отмечают, на каких сегодняшних парах будут. Адрес вашего сайта (GitHub Pages):</label><div class="form"><div class="full"><input id="lb" value="${esc(L.base||defBase())}" placeholder="https://логин.github.io/репозиторий/"></div></div><div class="foot"><button class="btn pri" data-act="pubLink">${L.code?"Обновить и поделиться ссылкой":"Создать ссылку"}</button></div></div><div style="height:12px"></div>`}
+function fbInit(){if(FB.db)return true;const c=window.FIREBASE_CONFIG;if(!window.firebase||!c||/ВСТАВЬ/.test(c.apiKey)){toast("Firebase не настроен или не загрузился");return false}firebase.initializeApp(c);FB.db=firebase.firestore();FB.auth=firebase.auth();return true}
+async function fbUid(){let u=await new Promise(r=>{const o=FB.auth.onAuthStateChanged(x=>{o();r(x)})});if(!u)u=(await FB.auth.signInAnonymously()).user;return u.uid}
+async function pubLink(){
+  const base=($("#lb").value.trim()).replace(/\/?$/,"/");
+  if(!/^https?:\/\/./.test(base)){toast("Укажите адрес сайта");return}
+  if(!fbInit())return;
+  try{
+    const uid=await fbUid();let code=lk().code;
+    if(!code)code=Array.from(crypto.getRandomValues(new Uint8Array(12)),b=>"abcdefghijkmnpqrstuvwxyz23456789"[b%32]).join("");
+    await FB.db.doc("groups/"+code).set({ownerUid:uid,group:CFG.group,names:NAMES,sch:JSON.stringify(SCH),times:TIMES,w1:CFG.w1});
+    lkSet({base,code});render();
+    await share("Отметьтесь, на каких парах будете сегодня: "+base+"student.html?g="+code,"Явка "+CFG.group);
+  }catch(e){if(e.code==="permission-denied"){lkSet({code:""});toast("Нет доступа к старой ссылке — создайте новую")}else toast("Ошибка: "+(e.code||e.message))}
 }
-function syncAttendanceUI(){
-  document.querySelectorAll("#app .row").forEach(row=>{
-    const btn=row.querySelector('[data-act="mp"], [data-act="mu"], [data-act="me"]');
-    if(!btn)return;
-    const i=+btn.dataset.i, m=ui.marks[i]||"";
-    row.classList.toggle("u",m==="u");row.classList.toggle("e",m==="e");row.classList.toggle("p",m==="p");
-    row.querySelectorAll('[data-act="mp"], [data-act="mu"], [data-act="me"]').forEach(b=>{
-      const v=b.dataset.act==="mp"?"p":b.dataset.act==="mu"?"u":"e";
-      b.classList.toggle("on",m===v);b.classList.toggle("u",m===v&&v==="u");b.classList.toggle("e",m===v&&v==="e");b.setAttribute("aria-pressed",String(m===v));
-    });
-  });
-  const n=Object.keys(ui.marks).length,h=$("#app .attendance-hint"),saveBtn=$("#app [data-act=saveMarks]");
-  if(h)h.innerHTML=`Ручная отметка старостой: отметьте только отсутствующих — остальные считаются присутствующими. Повторное нажатие снимает отметку. Отсутствуют: ${n} <button class="pb" data-act="allHere" style="min-width:0;margin-left:8px">Сбросить</button>`;
-  if(saveBtn)saveBtn.textContent="Сохранить пропуски"+(n?` (${n})`:"");
+async function pullAnswers(){
+  const c=lk().code;
+  if(!c){toast("Сначала создайте ссылку во вкладке «Группа»");return}
+  if(!ui.slots.length){toast("Выберите пару в расписании");return}
+  if(!fbInit())return;
+  try{
+    await fbUid();const q=await FB.db.collection("groups/"+c+"/att").where("date","==",ui.date).get(),got={};
+    q.forEach(d=>{const x=d.data();got[x.i]=x.slots||{}});
+    let yes=0,no=0,part=0,none=0;
+    NAMES.forEach((_,i)=>{const s=got[i];if(!s){none++;return}const a=ui.slots.map(k=>s[k]);
+      if(a.every(v=>v===true)){ui.marks[i]="p";yes++}
+      else if(a.every(v=>v===false)){if(!ui.marks[i])ui.marks[i]="u";no++}
+      else if(a.some(v=>v===true)&&a.some(v=>v===false))part++;
+      else none++});
+    toast("Будут: "+yes+", не будут: "+no+(part?", частично: "+part:"")+", не ответили: "+none);render();
+  }catch(e){toast("Ошибка: "+(e.code||e.message))}
 }
+
 function render(){
   document.querySelectorAll(".tab").forEach(t=>t.setAttribute("aria-selected",t.dataset.v===ui.tab));
-  const y=window.scrollY;$("#app").innerHTML=ui.tab==="today"?viewToday():ui.tab==="mark"?viewMark():ui.tab==="grp"?viewGrp():ui.tab==="online"?viewOnline():ui.detail!=null?viewDetail():viewSum();
+  const y=window.scrollY;$("#app").innerHTML=ui.tab==="today"?viewToday():ui.tab==="mark"?viewMark():ui.tab==="grp"?viewGrp():ui.detail!=null?viewDetail():viewSum();
   window.scrollTo({top:y,behavior:"instant"});fx();
 }
 document.addEventListener("click",e=>{
@@ -377,24 +397,6 @@ document.addEventListener("click",e=>{
   else if(a==="mark"){const m=ui.marks[i];if(!m)ui.marks[i]="u";else if(m==="u")ui.marks[i]="e";else delete ui.marks[i];syncAttendanceUI();return}
   else if(a==="mu"||a==="me"||a==="mp"){const v=a==="mu"?"u":a==="me"?"e":"p";if(ui.marks[i]===v)delete ui.marks[i];else ui.marks[i]=v;syncAttendanceUI();return}
   else if(a==="allHere"){ui.marks={};syncAttendanceUI();return}
-  else if(a==="cloudLogin"){
-    const email=$("#cloudEmail")?.value.trim(),pass=$("#cloudPass")?.value;
-    if(!email||!pass){toast("Введите email и пароль");return;}
-    if(!window.yavkaCloud){toast("Firebase ещё загружается");return;}
-    window.yavkaCloud.login(email,pass).then(()=>toast("Вход выполнен")).catch(e=>toast("Ошибка входа: "+e.message));return;
-  }
-  else if(a==="cloudLogout"){window.yavkaCloud?.logout().then(()=>toast("Вы вышли"));return;}
-  else if(a==="cloudPublish"){
-    if(!window.yavkaCloud){toast("Firebase ещё загружается");return;}
-    window.yavkaCloud.publish(CFG.group,NAMES,iso(new Date())).then(x=>{toast("Перекличка открыта!");const el=$("#cloudLinkLine");if(el)el.innerHTML=`Ссылка студентам: <a href="${x.url}" target="_blank">${x.url}</a> <button class="pb" data-act="copyCloudLink">Копировать</button>`;}).catch(e=>toast(e.message));return;
-  }
-  else if(a==="copyCloudLink"){const u="https://wdyavka.web.app/?group="+encodeURIComponent(CFG.group);navigator.clipboard?.writeText(u).then(()=>toast("Ссылка скопирована")).catch(()=>toast(u));return;}
-  else if(a==="cloudRefresh"){window.yavkaCloud?.watch(CFG.group,iso(new Date()));toast("Обновляем ответы");return;}
-  else if(a==="cloudClose"){window.yavkaCloud?.close(CFG.group,iso(new Date())).then(()=>toast("Перекличка закрыта")).catch(e=>toast(e.message));return;}
-  else if(a==="cloudImport"){
-    const c=window.yavkaCloudState||{},subs=c.submissions||[],date=iso(new Date());let added=0;
-    subs.forEach(s=>(s.answers||[]).forEach(ans=>{if(ans.status!=="a")return;const idx=NAMES.indexOf(s.studentName);if(idx<0)return;const exists=S.recs.some(x=>x.i===idx&&x.date===date&&x.subject===ans.subject&&x.type===ans.type&&(x.sl||"")===String(ans.slot));if(!exists){S.recs.push({id:S.uid++,i:idx,date,type:ans.type,subject:ans.subject,sl:String(ans.slot),hours:2,status:"u"});added++;}}));save();toast("В журнал перенесено пропусков: "+added);return;
-  }
   else if(a==="saveCfg"){CFG={group:$("#cg").value.trim()||"—",course:$("#cc").value.trim(),spec:$("#cs").value.trim(),w1:$("#cw").value||CFG.w1};S.cfg=CFG;save();toast("Настройки сохранены")}
   else if(a==="saveNames"){const nn=$("#gn").value.split("\n").map(s=>s.trim()).filter(Boolean);if(!nn.length){toast("Список пуст");return}const map=NAMES.map(n=>nn.indexOf(n));const lost=S.recs.filter(x=>map[x.i]<0).length;if(lost&&!confirm("Будет удалено записей о пропусках: "+lost+". Продолжить?"))return;S.recs=S.recs.filter(x=>map[x.i]>=0).map(x=>({...x,i:map[x.i]}));NAMES=nn;S.names=nn;ui.marks={};save();toast("Список сохранён")}
   else if(a==="clearAll"){if(confirm("Удалить все записи о пропусках?")){S.recs=[];ui.marks={};save();toast("Очищено")}}
@@ -415,6 +417,8 @@ document.addEventListener("click",e=>{
   else if(a==="shareOne"){shareXlsx([i],NAMES[i].split(" ")[0]).then(ok=>{if(!ok)share(textFor(i),NAMES[i])});return}
   else if(a==="shareAll"){shareXlsx(NAMES.map((_,k)=>k),CFG.group).then(ok=>{if(!ok)share(textAll(),"Явка "+CFG.group)});return}
 
+  else if(a==="pubLink"){pubLink();return}
+  else if(a==="pull"){pullAnswers();return}
     else if(a==="closeOv"){$("#ov").classList.remove("on");return}
   render();
 });
@@ -431,7 +435,7 @@ document.addEventListener("change",e=>{
   else if(f==="date"){ui.date=e.target.value;ui.slots=[];if(ui.date){loadMarks();render()}}
   else if(f==="ym"){ui.ym=e.target.value;animate=false;render()}
 });
-window.addEventListener("yavka-cloud-change",()=>{if(ui.tab==="online")render();});
+
 load();save();loadMarks();render();
 
 </script>
