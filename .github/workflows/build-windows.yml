@@ -1,0 +1,41 @@
+name: Сборка Windows
+
+on:
+  push:
+    branches: [main, master]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Подготовка
+        working-directory: desktop
+        run: |
+          npm install
+          mkdir -p app
+          if [ -f ../www/index.html ]; then cp ../www/index.html app/index.html
+          elif [ -f ../index.html ]; then cp ../index.html app/index.html
+          else echo "Не найден index.html"; exit 1; fi
+          cp ../www/firebase-config.js app/firebase-config.js
+          cp node_modules/exceljs/dist/exceljs.min.js app/exceljs.min.js
+          sed -i 's#https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js#exceljs.min.js#' app/index.html
+
+      - name: Сборка exe
+        working-directory: desktop
+        run: npx electron-builder --win portable --x64 --publish never
+
+      - name: Сохранить exe
+        uses: actions/upload-artifact@v4
+        with:
+          name: yavka-windows
+          path: desktop/dist/*.exe
