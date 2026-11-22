@@ -1,0 +1,33 @@
+{
+  "name": "yavka-desktop",
+  "version": "10.0.0",
+  "description": "Учёт явки студентов",
+  "author": "Yavka",
+  "main": "main.js",
+  "dependencies": {
+    "exceljs": "4.4.0"
+  },
+  "devDependencies": {
+    "electron": "31.7.7",
+    "electron-builder": "24.13.3"
+  },
+  "build": {
+    "appId": "com.yavka.desktop",
+    "productName": "Yavka",
+    "files": [
+      "main.js",
+      "icon.png",
+      "app/**"
+    ],
+    "win": {
+      "target": "portable",
+      "icon": "icon.png"
+    },
+    "portable": {
+      "artifactName": "Yavka-${version}.exe"
+    }
+  },
+  "scripts": {
+    "dist": "electron-builder --win portable --x64"
+  }
+}

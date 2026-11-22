@@ -1,0 +1,23 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{db}/documents {
+    match /groups/{g} {
+      allow get: if true;
+      allow list: if false;
+      allow create: if request.auth != null && request.resource.data.ownerUid == request.auth.uid;
+      allow update: if request.auth != null && resource.data.ownerUid == request.auth.uid
+                    && request.resource.data.ownerUid == resource.data.ownerUid;
+      allow delete: if request.auth != null && resource.data.ownerUid == request.auth.uid;
+
+      match /att/{id} {
+        allow create, update: if exists(/databases/$(db)/documents/groups/$(g))
+          && request.resource.data.keys().hasOnly(['i','date','slots','ts'])
+          && request.resource.data.i is int
+          && request.resource.data.date is string && request.resource.data.date.size() == 10
+          && request.resource.data.slots is map;
+        allow read, delete: if request.auth != null
+          && get(/databases/$(db)/documents/groups/$(g)).data.ownerUid == request.auth.uid;
+      }
+    }
+  }
+}

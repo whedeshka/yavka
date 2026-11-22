@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="ru"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Явка — отметиться</title><meta name="theme-color" content="#070b08">
+<style>
+:root{--bg:#070b08;--card:#101812;--ink:#ecf8ee;--mut:#91a397;--line:#26382b;--ac:#70f08b;--u:#ff7777;color-scheme:dark}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.45 Onest,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+.w{max-width:520px;margin:0 auto;padding:calc(18px + env(safe-area-inset-top,0px)) 14px calc(40px + env(safe-area-inset-bottom,0px))}
+h1{font-size:22px;margin:0 0 4px}.m{color:var(--mut);font-size:14px;margin-bottom:14px}
+button{font:inherit;color:inherit;cursor:pointer}
+.b{display:block;width:100%;text-align:left;border:1px solid var(--line);background:var(--card);border-radius:12px;padding:13px;margin-bottom:8px}
+.all{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px}
+.all button,.yn button{padding:12px 8px;border-radius:12px;border:1px solid var(--line);background:var(--card);font-weight:700}
+.p{border:1px solid var(--line);background:var(--card);border-radius:12px;padding:12px;margin-bottom:8px}
+.p b{display:block}.p span{color:var(--mut);font-size:13px}
+.yn{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.yes{background:linear-gradient(135deg,#8bffa0,#4bd66c)!important;color:#06200d!important;border-color:#8bffa0!important}
+.no{background:var(--u)!important;color:#2a0707!important;border-color:var(--u)!important}
+.st{margin-top:12px;font-size:14px;color:var(--mut);min-height:20px}
+.lnk{background:none;border:0;color:var(--ac);padding:0;text-decoration:underline}
+button:active{transform:scale(.97)}
+
+.weather{margin:14px 0 16px;padding:15px;border:1px solid #236d43;border-radius:17px;background:radial-gradient(ellipse at 92% 12%,rgba(33,176,87,.22),transparent 42%),linear-gradient(135deg,#10271a,#0d1711 70%);box-shadow:0 8px 26px rgba(0,0,0,.18);color:#effff2}
+.weather-main{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px;align-items:center}
+.weather-place{font-size:13px;font-weight:700;color:#d8f5df}
+.weather-now{display:flex;align-items:center;gap:12px;margin-top:7px}
+.weather-icon{font-size:38px;line-height:1}
+.weather-temp{font-size:32px;font-weight:800;line-height:1.1}
+.weather-desc,.weather-feels{font-size:12px;color:#b2c9b8}
+.weather-wish{border-left:1px solid rgba(177,226,190,.22);padding:7px 0 7px 14px;min-height:64px;display:flex;flex-direction:column;justify-content:center}
+.weather-wish b{font-size:15px;color:#8df5a6}
+.weather-wish span{font-size:13px;line-height:1.4;color:#d9e9dd;margin-top:5px}
+.weather-meta{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;border-top:1px solid rgba(177,226,190,.18);margin-top:13px;padding-top:11px}
+.weather-meta div{text-align:center;font-size:12px;color:#d9e9dd}
+.weather-meta b{display:block;font-size:13px;color:#f3fff5}
+.weather-note{font-size:10px;color:#88a894;margin-top:7px}
+.weather.loading .weather-desc{font-size:13px}
+@media(max-width:390px){.weather{padding:12px}.weather-main{grid-template-columns:1fr;gap:9px}.weather-wish{border-left:0;border-top:1px solid rgba(177,226,190,.22);padding:10px 0 0;min-height:0}.weather-now{margin-top:4px}.weather-meta div{font-size:11px}.weather-meta b{font-size:12px}}
+
+</style></head><body><div class="w" id="app">Загрузка…</div>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="firebase-config.js"></script>
+<script>
+const $=s=>document.querySelector(s),esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const g=new URLSearchParams(location.search).get("g"),pad=n=>String(n).padStart(2,"0"),t=new Date();
+const D=t.getFullYear()+"-"+pad(t.getMonth()+1)+"-"+pad(t.getDate());
+const DOW=["воскресенье","понедельник","вторник","среда","четверг","пятница","суббота"];
+let G,db,ME=null,ans={},stt="";
+function weekOf(ds,w1){const [y,m,d]=ds.split("-").map(Number),[a,b,c]=w1.split("-").map(Number);const an=Date.UTC(a,b-1,c),dt=Date.UTC(y,m-1,d),am=an-((new Date(an).getUTCDay()+6)%7)*864e5,dm=dt-((new Date(dt).getUTCDay()+6)%7)*864e5;return ((Math.floor(Math.floor((dm-am)/864e5)/7)%2)+2)%2}
+const dowOf=ds=>{const [y,m,d]=ds.split("-").map(Number);return new Date(Date.UTC(y,m-1,d)).getUTCDay()};
+function parseSlot(s){const [name,room]=s.replace(/^!/,"").split("|");return {name,room}}
+const AK=()=>"yavka-a-"+g+"-"+ME+"-"+D;
+
+const WEATHER_KEY="yavka-weather-orenburg-v1",WEATHER_TTL=30*60*1000;
+let weatherData=null,weatherState="loading";
+function weatherText(code){if(code===0)return ["☀️","Ясно"];if([1,2].includes(code))return ["🌤️","Переменная облачность"];if(code===3)return ["☁️","Пасмурно"];if([45,48].includes(code))return ["🌫️","Туман"];if([51,53,55,56,57].includes(code))return ["🌦️","Морось"];if([61,63,65,66,67,80,81,82].includes(code))return ["🌧️","Дождь"];if([71,73,75,77,85,86].includes(code))return ["❄️","Снег"];if([95,96,99].includes(code))return ["⛈️","Гроза"];return ["🌡️","Погода в Оренбурге"]}
+function weatherWish(c){if(c.precipitation_probability>=50||c.precipitation>0.2)return ["Захвати зонт!","Возможны осадки — пусть погода не испортит планы ☔"];if(c.temperature<=-15)return ["Одевайся теплее!","На улице мороз. Шарф и тёплая куртка сегодня пригодятся 🧣"];if(c.temperature<=2)return ["Не замёрзни!","Сегодня прохладно, не забудь одеться потеплее 🧥"];if(c.temperature>=28)return ["Береги себя в жару!","Пей воду и по возможности держись в тени 💧"];if(c.wind_speed>=12)return ["Осторожнее с ветром!","На улице ветрено — выбирай одежду по погоде 🌬️"];if(c.temperature>=18)return ["Отличного дня!","На улице тепло — пусть и настроение будет солнечным ☀️"];return ["Хорошего дня!","Пусть пары пройдут легко, а настроение будет отличным 😊"]}
+function weatherCard(){if(!weatherData)return '<section class="weather loading" id="weatherCard"><div class="weather-place">📍 Оренбург · погода сегодня</div><div class="weather-desc">'+(weatherState==="loading"?"Загружаем прогноз…":"Пока нет данных о погоде. Проверьте подключение к интернету.")+'</div><div class="weather-note">Прогноз Open-Meteo</div></section>';
+ const c=weatherData,icon=weatherText(c.weather_code),wish=weatherWish(c);
+ return '<section class="weather" id="weatherCard"><div class="weather-main"><div><div class="weather-place">📍 Оренбург · сегодня</div><div class="weather-now"><span class="weather-icon">'+icon[0]+'</span><div><div class="weather-temp">'+Math.round(c.temperature)+'°</div><div class="weather-feels">Ощущается как '+Math.round(c.apparent_temperature)+'°</div><div class="weather-desc">'+icon[1]+'</div></div></div></div><div class="weather-wish"><b>☕ '+wish[0]+'</b><span>'+wish[1]+'</span></div></div><div class="weather-meta"><div>💨 Ветер<b>'+Math.round(c.wind_speed)+' м/с</b></div><div>💧 Влажность<b>'+Math.round(c.relative_humidity)+'%</b></div><div>🌧️ Осадки<b>'+(c.precipitation_probability==null?Number(c.precipitation).toFixed(1)+" мм":Math.round(c.precipitation_probability)+"%")+'</b></div></div><div class="weather-note">Open-Meteo · '+(weatherState==="stale"?"последние сохранённые данные":"обновляется каждые 30 минут")+'</div></section>'}
+function paintWeather(){const old=document.getElementById("weatherCard");if(old)old.outerHTML=weatherCard()}
+async function loadWeather(){try{const cached=JSON.parse(localStorage.getItem(WEATHER_KEY)||"null");if(cached&&cached.data){weatherData=cached.data;weatherState=Date.now()-cached.savedAt<WEATHER_TTL?"fresh":"stale";paintWeather();if(weatherState==="fresh")return}}catch(e){}
+ weatherState="loading";paintWeather();
+ try{const url="https://api.open-meteo.com/v1/forecast?latitude=51.7682&longitude=55.0969&current=temperature_2m,relative_humidity_2m,apparent_temperature,is_day,precipitation,weather_code,wind_speed_10m&hourly=precipitation_probability&forecast_days=1&timezone=Asia%2FYekaterinburg";
+ const response=await fetch(url,{cache:"no-store"});if(!response.ok)throw new Error("weather_http_"+response.status);const data=await response.json(),c=data.current;if(!c)throw new Error("weather_empty");
+ const hour=(c.time||"").slice(0,13)+":00",idx=(data.hourly?.time||[]).indexOf(hour),prob=idx>=0?data.hourly.precipitation_probability[idx]:null;
+ weatherData={temperature:c.temperature_2m,apparent_temperature:c.apparent_temperature,relative_humidity:c.relative_humidity_2m,wind_speed:c.wind_speed_10m,precipitation:c.precipitation,precipitation_probability:prob,weather_code:c.weather_code};
+ weatherState="fresh";localStorage.setItem(WEATHER_KEY,JSON.stringify({savedAt:Date.now(),data:weatherData}));paintWeather();
+ }catch(e){if(weatherData){weatherState="stale"}else{weatherState="error"}paintWeather()}
+}
+
+function pairs(){const day=G.sch[weekOf(D,G.w1)][dowOf(D)]||[];return day.map((s,k)=>s?{k,...parseSlot(s)}:null).filter(Boolean)}
+function allV(ps){const v=ps.map(p=>ans[p.k]);return v.every(x=>x===true)?true:v.every(x=>x===false)?false:null}
+function msg(t){$("#app").innerHTML=`<div class="m">${t}</div>`}
+function pick(i){ME=i;localStorage.setItem("yavka-me-"+g,i);try{ans=JSON.parse(localStorage.getItem(AK()))||{}}catch(e){ans={}}stt="";render()}
+function render(){
+  const A=$("#app");
+  if(ME===null){A.innerHTML=`<h1>Кто вы?</h1><div class="m">Группа ${esc(G.group)} · выберите себя в списке</div>`+weatherCard()+G.names.map((n,i)=>`<button class="b" data-a="me" data-i="${i}">${esc(n)}</button>`).join("");return}
+  const ps=pairs(),dt=new Date().toLocaleDateString("ru-RU",{day:"numeric",month:"long"});
+  let h=`<h1>${esc(G.names[ME])}</h1><div class="m">${dt}, ${DOW[dowOf(D)]} · <button class="lnk" data-a="chg">это не я</button></div>`+weatherCard();
+  if(!ps.length){A.innerHTML=h+`<div class="m">Сегодня занятий нет 🎉</div>`;return}
+  const av=allV(ps);
+  h+=`<div class="all"><button class="${av===true?"yes":""}" data-a="all" data-v="1">Буду на всех парах</button><button class="${av===false?"no":""}" data-a="all" data-v="0">Не буду на всех парах</button></div>`;
+  h+=ps.map(p=>`<div class="p"><b>${p.k+1} пара · ${esc(G.times[p.k]||"")}</b><span>${esc(p.name)}${p.room?" · каб. "+esc(p.room):""}</span><div class="yn"><button class="${ans[p.k]===true?"yes":""}" data-a="s" data-k="${p.k}" data-v="1">Буду</button><button class="${ans[p.k]===false?"no":""}" data-a="s" data-k="${p.k}" data-v="0">Не буду</button></div></div>`).join("");
+  A.innerHTML=h+`<div class="st">${stt}</div>`;
+}
+async function send(){
+  const ps=pairs(),o={};ps.forEach(p=>{if(ans[p.k]!==undefined)o[p.k]=ans[p.k]});
+  localStorage.setItem(AK(),JSON.stringify(o));stt="Отправляю…";render();
+  try{await db.doc(`groups/${g}/att/${D}_${ME}`).set({i:ME,date:D,slots:o,ts:firebase.firestore.FieldValue.serverTimestamp()});stt="Отправлено ✓ Ответ можно изменить в любой момент."}
+  catch(e){stt="Не удалось отправить — нажмите ещё раз."}
+  render();
+}
+document.addEventListener("click",e=>{
+  const b=e.target.closest("[data-a]");if(!b)return;const a=b.dataset.a;
+  if(a==="me")pick(+b.dataset.i);
+  else if(a==="chg"){localStorage.removeItem("yavka-me-"+g);ME=null;ans={};render()}
+  else if(a==="s"){ans[+b.dataset.k]=b.dataset.v==="1";send()}
+  else if(a==="all"){pairs().forEach(p=>ans[p.k]=b.dataset.v==="1");send()}
+});
+(async()=>{
+  if(!g)return msg("Ссылка неполная. Попросите старосту прислать её ещё раз.");
+  try{
+    firebase.initializeApp(window.FIREBASE_CONFIG);db=firebase.firestore();
+    const s=await db.doc("groups/"+g).get();
+    if(!s.exists)return msg("Группа не найдена. Проверьте ссылку.");
+    G=s.data();G.sch=JSON.parse(G.sch);loadWeather();
+    const me=localStorage.getItem("yavka-me-"+g);
+    if(me!==null&&G.names[+me]!==undefined)pick(+me);else render();
+  }catch(e){msg("Не удалось загрузить данные. Проверьте интернет.")}
+})();
+</script></body></html>

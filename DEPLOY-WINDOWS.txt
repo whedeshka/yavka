@@ -1,0 +1,13 @@
+1) Распакуйте ZIP.
+2) Откройте папку yavka-apk.
+3) В адресной строке Проводника напишите powershell и нажмите Enter.
+4) Выполните: firebase.cmd deploy --only hosting,firestore:rules
+5) В Firebase Console включите Authentication → Sign-in method → Anonymous.
+6) В приложении Явка заполните настоящие фамилии, войдите во вкладке Онлайн и откройте перекличку.
+
+
+Обновление Windows-приложения (версия 9.2.0):
+1) Откройте PowerShell в папке yavka-apk\desktop.
+2) Выполните: npm.cmd install
+3) Выполните: npx.cmd electron-builder --win portable
+4) Готовый Yavka-9.2.0.exe появится в папке desktop\dist.
