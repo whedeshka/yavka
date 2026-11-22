@@ -1,0 +1,53 @@
+name: Сборка APK
+
+on:
+  push:
+    branches: [main, master]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Установка зависимостей
+        run: npm install
+
+      - name: Подключить библиотеку Excel (работает без интернета)
+        run: |
+          mkdir -p www
+          if [ ! -f www/index.html ]; then
+            if [ -f index.html ]; then cp index.html www/index.html; else echo "Не найден index.html: загрузите его в репозиторий (в папку www или в корень)"; exit 1; fi
+          fi
+          cp node_modules/exceljs/dist/exceljs.min.js www/exceljs.min.js
+          sed -i 's#https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js#exceljs.min.js#' www/index.html
+
+      - name: Создание Android-проекта
+        run: |
+          npx cap add android
+          npx cap sync android
+
+      - name: Иконка приложения
+        run: cp -r android-res/. android/app/src/main/res/
+
+      - name: Сборка APK
+        working-directory: android
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleDebug
+
+      - name: Сохранить APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: yavka-apk
+          path: android/app/build/outputs/apk/debug/app-debug.apk
